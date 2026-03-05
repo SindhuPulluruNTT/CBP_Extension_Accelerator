@@ -1,0 +1,1 @@
+CLASS zbp_pr_ud_display_1 DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zpr_ud_display.
