@@ -1,0 +1,12 @@
+{
+  "name": "sindhupulluruntt-cbp_extension_accelerator",
+  "version": "1.0.0",
+  "description": "SindhuPulluruNTT-CBP_Extension_Accelerator",
+  "repositoryLayout": {
+    "format": "json",
+    "formatVersion": "6",
+    "keepClient": "false",
+    "metaInformation": ".gctsmetadata/",
+    "tableContent": "true"
+  }
+}
