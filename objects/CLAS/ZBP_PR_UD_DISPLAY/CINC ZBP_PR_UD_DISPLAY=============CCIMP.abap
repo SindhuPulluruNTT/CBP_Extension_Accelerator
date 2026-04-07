@@ -168,7 +168,7 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                       CLEAR: ls_cond_upd.
                       ls_cond_upd-cid = lv_i.
                       ls_cond_upd-kschl = ls_cond-cond_type.
-                      IF ls_price-calc_type EQ 'Fixed amount'.
+                      IF ls_price-calc_type EQ 'Fixed Amount'.
                         ls_price-cond_value = ( ls_price-cond_value / ls_price-per ) * ls_gr-quantityinbaseunit.
                         IF ls_price-cond_class = 'Discount'.
                           ls_price-cond_value = ls_price-cond_value * -1.
