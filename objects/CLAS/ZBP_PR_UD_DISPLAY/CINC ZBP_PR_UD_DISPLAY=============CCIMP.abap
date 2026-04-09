@@ -51,7 +51,8 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
           lv_share     TYPE p DECIMALS 3,
           lv_post      TYPE c,
           lv_i         TYPE i VALUE 1,
-          lv_message   TYPE string.
+          lv_message   TYPE string,
+          lv_attr_code TYPE string.
 
     LOOP AT entities INTO DATA(ls_data).
 
@@ -151,16 +152,23 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                 READ TABLE lt_insp_results INTO DATA(ls_results) WITH KEY inspectionlot = ls_data-lot
                                                                           inspectioncharacteristic = ls_insp_char-inspectioncharacteristic.
                 IF sy-subrc EQ 0.
-
+                  CONCATENATE ls_results-characteristicattributecodegrp ls_results-characteristicattributecode
+                    INTO lv_attr_code SEPARATED BY '-'.
                   LOOP AT lt_price INTO DATA(ls_price) WHERE cond_type = ls_cond-cond_type.
                     CLEAR: lv_post.
-                    IF ls_price-single_value EQ abap_false.
-                      IF ls_price-low LE ls_results-inspectionresultmeanvalue AND
-                         ls_results-inspectionresultmeanvalue LE ls_price-high.
-                        lv_post = abap_true.
+                    IF ls_results-inspectionresulthasmeanvalue EQ abap_true.
+                      IF ls_price-single_value EQ abap_false.
+                        IF ls_price-low LE ls_results-inspectionresultmeanvalue AND
+                           ls_results-inspectionresultmeanvalue LE ls_price-high.
+                          lv_post = abap_true.
+                        ENDIF.
+                      ELSE.
+                        IF ls_price-low EQ ls_results-inspectionresultmeanvalue.
+                          lv_post = abap_true.
+                        ENDIF.
                       ENDIF.
                     ELSE.
-                      IF ls_price-low = ls_results-characteristicattributecode.
+                      IF ls_price-low = lv_attr_code .
                         lv_post = abap_true.
                       ENDIF.
                     ENDIF.
@@ -181,6 +189,7 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                       lv_i = lv_i + 1.
                     ENDIF.
                   ENDLOOP.
+                  CLEAR: lv_attr_code.
                 ENDIF.
               ENDIF.
             ENDLOOP.
