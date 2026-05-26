@@ -54,6 +54,8 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
           lv_message   TYPE string,
           lv_attr_code TYPE string.
 
+    DATA: lt_je_deep TYPE TABLE FOR ACTION IMPORT i_journalentrytp~post.
+
     LOOP AT entities INTO DATA(ls_data).
 
 * Get Material Document and Purchase Order
@@ -196,6 +198,16 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
 
 
             IF lt_cond_upd[] IS NOT INITIAL.
+              READ ENTITIES OF i_purchaseordertp_2
+                    ENTITY purchaseorderitem
+                    BY \_purordpricingelement
+                    ALL FIELDS
+                    WITH VALUE #( (  purchaseorder = ls_gr-purchaseorder
+                                     purchaseorderitem   = ls_gr-purchaseorderitem ) )
+*                                   pricingdocument     = ls_element-pricingdocument
+*                                   pricingdocumentitem = ls_element-pricingdocumentitem ) )
+                    RESULT DATA(lt_result_before).
+
 * Update PO Price - add custom condition types based on results recording
               MODIFY ENTITIES OF i_purchaseordertp_2
                 ENTITY purchaseorderitem
@@ -216,6 +228,18 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                   REPORTED DATA(ls_reported_2).
               IF ls_failed_2-purorderitempricingelement[] IS NOT INITIAL.
                 CONCATENATE 'Error when updating PO' ls_gr-purchaseorder INTO lv_message SEPARATED BY space.
+              ELSE.
+                READ ENTITIES OF i_purchaseordertp_2
+                  ENTITY purchaseorderitem
+                  BY \_purordpricingelement
+                  ALL FIELDS
+                  WITH VALUE #( (  purchaseorder = ls_gr-purchaseorder
+                                   purchaseorderitem   = ls_gr-purchaseorderitem ) )
+*                                   pricingdocument     = ls_element-pricingdocument
+*                                   pricingdocumentitem = ls_element-pricingdocumentitem ) )
+                  RESULT DATA(lt_result_after).
+
+********************POST JOURNAL ENTRIES************************
               ENDIF.
 
               IF lv_message IS NOT INITIAL.
