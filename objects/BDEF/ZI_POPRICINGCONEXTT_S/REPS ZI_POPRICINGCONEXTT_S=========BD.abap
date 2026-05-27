@@ -75,7 +75,7 @@ authorization dependent by _PoPricingConditiAll
 
   side effects
   {
-    field Single affects field High;
+    field Single affects $self;           //field High;
   }
 
   factory action copyItem [1];

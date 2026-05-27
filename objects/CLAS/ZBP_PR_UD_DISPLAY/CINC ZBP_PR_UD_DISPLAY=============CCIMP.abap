@@ -178,7 +178,7 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                       CLEAR: ls_cond_upd.
                       ls_cond_upd-cid = lv_i.
                       ls_cond_upd-kschl = ls_cond-cond_type.
-                      IF ls_price-calc_type EQ 'Fixed Amount'.
+                      IF ls_price-calc_type EQ 'Fixed Amount' OR ls_price-calc_type+0(5) EQ 'Fixed'.
                         ls_price-cond_value = ( ls_price-cond_value / ls_price-per ) * ls_gr-quantityinbaseunit.
                         IF ls_price-cond_class = 'Discount'.
                           ls_price-cond_value = ls_price-cond_value * -1.
@@ -204,8 +204,6 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                     ALL FIELDS
                     WITH VALUE #( (  purchaseorder = ls_gr-purchaseorder
                                      purchaseorderitem   = ls_gr-purchaseorderitem ) )
-*                                   pricingdocument     = ls_element-pricingdocument
-*                                   pricingdocumentitem = ls_element-pricingdocumentitem ) )
                     RESULT DATA(lt_result_before).
 
 * Update PO Price - add custom condition types based on results recording
@@ -235,8 +233,6 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                   ALL FIELDS
                   WITH VALUE #( (  purchaseorder = ls_gr-purchaseorder
                                    purchaseorderitem   = ls_gr-purchaseorderitem ) )
-*                                   pricingdocument     = ls_element-pricingdocument
-*                                   pricingdocumentitem = ls_element-pricingdocumentitem ) )
                   RESULT DATA(lt_result_after).
 
 ********************POST JOURNAL ENTRIES************************
