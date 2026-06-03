@@ -38,6 +38,24 @@
     "DOKLRELES":"",
     "DOKLDATE":"0000-00-00",
     "DOKLTIME":"00:00:00"
+   },
+   {
+    "ID":"NA",
+    "OBJECT":"ZPR_MESSAGES_EXT003",
+    "LANGU":"D",
+    "TYP":"E",
+    "DOKVERSION":1,
+    "DOKSTATE":"N",
+    "DOKFORM":"S_DOCU_SHOW",
+    "DOKSTYLE":"S_DOCUS1",
+    "DOKFUSER":"SAP_CUSTOMER",
+    "DOKFRELES":"",
+    "DOKFDATE":"0000-00-00",
+    "DOKFTIME":"00:00:00",
+    "DOKLUSER":"SAP_CUSTOMER",
+    "DOKLRELES":"",
+    "DOKLDATE":"0000-00-00",
+    "DOKLTIME":"00:00:00"
    }
   ]
  },
@@ -66,6 +84,17 @@
     "TXTLINES":0,
     "DOKSTATE":"N",
     "SELFDEF":"3"
+   },
+   {
+    "ID":"NA",
+    "OBJECT":"ZPR_MESSAGES_EXT003",
+    "LANGU":"D",
+    "TYP":"E",
+    "VERSION":1,
+    "MASTERLANG":"X",
+    "TXTLINES":0,
+    "DOKSTATE":"N",
+    "SELFDEF":"3"
    }
   ]
  },
@@ -84,6 +113,12 @@
     "ARBGB":"ZPR_MESSAGES_EXT",
     "MSGNR":"002",
     "TEXT":"&1 : &2"
+   },
+   {
+    "SPRSL":"E",
+    "ARBGB":"ZPR_MESSAGES_EXT",
+    "MSGNR":"003",
+    "TEXT":"&1"
    },
    {
     "SPRSL":"E",
@@ -128,21 +163,28 @@
     "ARBGB":"ZPR_MESSAGES_EXT",
     "MSGNR":"001",
     "NAME":"SAP_CUSTOMER",
-    "DATUM":"2026-05-26",
+    "DATUM":"2026-06-03",
     "SELFDEF":"3"
    },
    {
     "ARBGB":"ZPR_MESSAGES_EXT",
     "MSGNR":"002",
     "NAME":"SAP_CUSTOMER",
-    "DATUM":"2026-05-26",
+    "DATUM":"2026-06-03",
+    "SELFDEF":"3"
+   },
+   {
+    "ARBGB":"ZPR_MESSAGES_EXT",
+    "MSGNR":"003",
+    "NAME":"SAP_CUSTOMER",
+    "DATUM":"2026-06-03",
     "SELFDEF":"3"
    },
    {
     "ARBGB":"ZPR_MESSAGES_EXT",
     "MSGNR":"175",
     "NAME":"SAP_CUSTOMER",
-    "DATUM":"2026-05-26",
+    "DATUM":"2026-06-03",
     "SELFDEF":"3"
    }
   ]
@@ -171,8 +213,8 @@
     "CRELEASE":"",
     "DELFLAG":"",
     "TRANSLTTXT":"",
-    "CREATED_ON":"2025-09-20",
-    "CHECK_DATE":"2025-09-20",
+    "CREATED_ON":"2026-06-02",
+    "CHECK_DATE":"2026-06-02",
     "CHECK_CFG":""
    }
   ]

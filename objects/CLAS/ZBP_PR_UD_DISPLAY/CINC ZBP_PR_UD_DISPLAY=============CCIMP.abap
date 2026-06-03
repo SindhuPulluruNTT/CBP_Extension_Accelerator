@@ -1,3 +1,13 @@
+CLASS lcl_pr_buffer DEFINITION.
+  PUBLIC SECTION.
+    CLASS-DATA : lt_je_deep TYPE TABLE FOR ACTION IMPORT i_journalentrytp~post,
+                 lt_gl_data TYPE TABLE FOR HIERARCHY d_journalentrypostglitemp,
+                 lt_curr    TYPE TABLE FOR HIERARCHY d_journalentrypostcurrencyamtp,
+                 lv_po      TYPE ebeln,
+                 lv_bukrs   TYPE bukrs,
+                 lv_batch   TYPE charg_d.
+ENDCLASS.
+
 CLASS lhc_zpr_ud_display DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
 
@@ -52,9 +62,10 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
           lv_post      TYPE c,
           lv_i         TYPE i VALUE 1,
           lv_message   TYPE string,
-          lv_attr_code TYPE string.
+          lv_attr_code TYPE string,
+          lv_glitem    TYPE c LENGTH 6.
 
-    DATA: lt_je_deep TYPE TABLE FOR ACTION IMPORT i_journalentrytp~post.
+    SELECT * FROM zpr_tb_glmap INTO TABLE @DATA(lt_glmap).
 
     LOOP AT entities INTO DATA(ls_data).
 
@@ -67,6 +78,9 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                                                       AND materialdocumentitem = @ls_insplot-materialdocumentitem
                                                       INTO @DATA(ls_gr).
         IF sy-subrc EQ 0.
+          lcl_pr_buffer=>lv_po = ls_gr-purchaseorder.
+          lcl_pr_buffer=>lv_bukrs = ls_gr-companycode.
+          lcl_pr_buffer=>lv_batch = ls_gr-batch.
           SELECT SINGLE * FROM i_purchaseorderitemapi01 WHERE purchaseorder = @ls_gr-purchaseorder
                                                         AND   purchaseorderitem = @ls_gr-purchaseorderitem
                                                         INTO @DATA(ls_po).
@@ -115,7 +129,7 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                  ) TO reported-zpr_ud_display.
       ENDIF.
 
-      IF lv_price_upd EQ abap_true.
+      IF lv_price_upd EQ abap_true.              " AND ls_data-code+0(1) NE 'R'.
 
         SELECT SINGLE * FROM i_inspectionlot WHERE inspectionlot = @ls_data-lot
            INTO @DATA(ls_insp_lot).
@@ -205,7 +219,10 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                     WITH VALUE #( (  purchaseorder = ls_gr-purchaseorder
                                      purchaseorderitem   = ls_gr-purchaseorderitem ) )
                     RESULT DATA(lt_result_before).
-
+              SORT lt_result_before BY purchaseorder purchaseorderitem pricingdocument pricingdocumentitem
+                   pricingprocedurestep pricingprocedurecounter DESCENDING.
+              DELETE ADJACENT DUPLICATES FROM lt_result_before COMPARING purchaseorder purchaseorderitem pricingdocument pricingdocumentitem
+                   pricingprocedurestep.
 * Update PO Price - add custom condition types based on results recording
               MODIFY ENTITIES OF i_purchaseordertp_2
                 ENTITY purchaseorderitem
@@ -234,8 +251,41 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                   WITH VALUE #( (  purchaseorder = ls_gr-purchaseorder
                                    purchaseorderitem   = ls_gr-purchaseorderitem ) )
                   RESULT DATA(lt_result_after).
-
+                SORT lt_result_after BY purchaseorder purchaseorderitem pricingdocument pricingdocumentitem
+                   pricingprocedurestep pricingprocedurecounter DESCENDING.
+                DELETE ADJACENT DUPLICATES FROM lt_result_after COMPARING purchaseorder purchaseorderitem pricingdocument pricingdocumentitem
+                  pricingprocedurestep.
 ********************POST JOURNAL ENTRIES************************
+                lv_i = 1.
+                lv_glitem = 001.
+                LOOP AT lt_result_after INTO DATA(ls_result_after).
+                  READ TABLE lt_glmap INTO DATA(ls_glmap) WITH KEY cond_type = ls_result_after-conditiontype.
+                  IF sy-subrc EQ 0.
+                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_gl_data ASSIGNING FIELD-SYMBOL(<gl_data>).
+                    <gl_data>-glaccountlineitem = lv_glitem.
+                    <gl_data>-glaccount = ls_glmap-debit_gl.
+                    <gl_data>-documentitemtext = ls_glmap-cond_type.
+                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_curr ASSIGNING FIELD-SYMBOL(<gl_curr>).
+                    <gl_curr>-currencyrole = '00'.
+                    <gl_curr>-journalentryitemamount = ls_result_after-conditionrateamount.
+                    <gl_curr>-currency = ls_gr-companycodecurrency.
+                    <gl_data>-_currencyamount = lcl_pr_buffer=>lt_curr[].
+                    CLEAR: lcl_pr_buffer=>lt_curr[].
+                    lv_i = lv_i + 1.
+                    lv_glitem = lv_glitem + 1.
+                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_gl_data ASSIGNING <gl_data>.
+                    <gl_data>-glaccountlineitem = lv_glitem.
+                    <gl_data>-glaccount = ls_glmap-credit_gl.
+                    <gl_data>-documentitemtext = ls_glmap-cond_type.
+                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_curr ASSIGNING <gl_curr>.
+                    <gl_curr>-currencyrole = '00'.
+                    <gl_curr>-journalentryitemamount = ( ls_result_after-conditionrateamount * -1 ).
+                    <gl_curr>-currency = ls_gr-companycodecurrency.
+                    <gl_data>-_currencyamount = lcl_pr_buffer=>lt_curr[].
+                    CLEAR: lcl_pr_buffer=>lt_curr[].
+                    lv_glitem = lv_glitem + 1.
+                  ENDIF.
+                ENDLOOP.
               ENDIF.
 
               IF lv_message IS NOT INITIAL.
@@ -291,6 +341,44 @@ ENDCLASS.
 CLASS lsc_zpr_ud_display IMPLEMENTATION.
 
   METHOD finalize.
+
+    DATA: lv_message TYPE string.
+
+    IF lcl_pr_buffer=>lt_gl_data[] IS NOT INITIAL.
+
+      APPEND INITIAL LINE TO lcl_pr_buffer=>lt_je_deep ASSIGNING FIELD-SYMBOL(<je_deep>).
+      <je_deep>-%cid = 1.
+      <je_deep>-%param = VALUE #(
+      companycode = lcl_pr_buffer=>lv_bukrs
+      documentreferenceid = lcl_pr_buffer=>lv_po
+      createdbyuser = sy-uname
+      businesstransactiontype = 'RFBU'
+      accountingdocumenttype = 'SA'
+      documentdate = sy-datlo
+      postingdate = sy-datlo
+      accountingdocumentheadertext = lcl_pr_buffer=>lv_batch ).
+      <je_deep>-%param-_glitems = lcl_pr_buffer=>lt_gl_data[].
+
+      MODIFY ENTITIES OF i_journalentrytp
+                      ENTITY journalentry
+                      EXECUTE post FROM lcl_pr_buffer=>lt_je_deep
+                      FAILED DATA(ls_failed_deep)
+                      REPORTED DATA(ls_reported_deep)
+                      MAPPED DATA(ls_mapped_deep).
+      IF ls_failed_deep-journalentry[] IS NOT INITIAL.
+        lv_message = 'Error when posting Journal Entries'.
+      ENDIF.
+      IF lv_message IS NOT INITIAL.
+        APPEND VALUE #(                  %msg = new_message(
+                   id = 'ZPR_MESSAGES_EXT'
+                   number = '003'
+                   v1 =    lv_message
+                   severity = if_abap_behv_message=>severity-information
+                                      )
+                 ) TO reported-zpr_ud_display.
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD check_before_save.
