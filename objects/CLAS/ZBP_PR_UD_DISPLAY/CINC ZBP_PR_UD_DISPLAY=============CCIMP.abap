@@ -129,7 +129,7 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                  ) TO reported-zpr_ud_display.
       ENDIF.
 
-      IF lv_price_upd EQ abap_true.              " AND ls_data-code+0(1) NE 'R'.
+      IF lv_price_upd EQ abap_true AND ls_data-code+0(1) NE 'R'.
 
         SELECT SINGLE * FROM i_inspectionlot WHERE inspectionlot = @ls_data-lot
            INTO @DATA(ls_insp_lot).
