@@ -259,31 +259,35 @@ CLASS lhc_zpr_ud_display IMPLEMENTATION.
                 lv_i = 1.
                 lv_glitem = 001.
                 LOOP AT lt_result_after INTO DATA(ls_result_after).
-                  READ TABLE lt_glmap INTO DATA(ls_glmap) WITH KEY cond_type = ls_result_after-conditiontype.
+                  CLEAR: ls_cond_upd.
+                  READ TABLE lt_cond_upd INTO ls_cond_upd WITH KEY kschl = ls_result_after-conditiontype.
                   IF sy-subrc EQ 0.
-                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_gl_data ASSIGNING FIELD-SYMBOL(<gl_data>).
-                    <gl_data>-glaccountlineitem = lv_glitem.
-                    <gl_data>-glaccount = ls_glmap-debit_gl.
-                    <gl_data>-documentitemtext = ls_glmap-cond_type.
-                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_curr ASSIGNING FIELD-SYMBOL(<gl_curr>).
-                    <gl_curr>-currencyrole = '00'.
-                    <gl_curr>-journalentryitemamount = ls_result_after-conditionrateamount.
-                    <gl_curr>-currency = ls_gr-companycodecurrency.
-                    <gl_data>-_currencyamount = lcl_pr_buffer=>lt_curr[].
-                    CLEAR: lcl_pr_buffer=>lt_curr[].
-                    lv_i = lv_i + 1.
-                    lv_glitem = lv_glitem + 1.
-                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_gl_data ASSIGNING <gl_data>.
-                    <gl_data>-glaccountlineitem = lv_glitem.
-                    <gl_data>-glaccount = ls_glmap-credit_gl.
-                    <gl_data>-documentitemtext = ls_glmap-cond_type.
-                    APPEND INITIAL LINE TO lcl_pr_buffer=>lt_curr ASSIGNING <gl_curr>.
-                    <gl_curr>-currencyrole = '00'.
-                    <gl_curr>-journalentryitemamount = ( ls_result_after-conditionrateamount * -1 ).
-                    <gl_curr>-currency = ls_gr-companycodecurrency.
-                    <gl_data>-_currencyamount = lcl_pr_buffer=>lt_curr[].
-                    CLEAR: lcl_pr_buffer=>lt_curr[].
-                    lv_glitem = lv_glitem + 1.
+                    READ TABLE lt_glmap INTO DATA(ls_glmap) WITH KEY cond_type = ls_result_after-conditiontype.
+                    IF sy-subrc EQ 0.
+                      APPEND INITIAL LINE TO lcl_pr_buffer=>lt_gl_data ASSIGNING FIELD-SYMBOL(<gl_data>).
+                      <gl_data>-glaccountlineitem = lv_glitem.
+                      <gl_data>-glaccount = ls_glmap-debit_gl.
+                      <gl_data>-documentitemtext = ls_glmap-cond_type.
+                      APPEND INITIAL LINE TO lcl_pr_buffer=>lt_curr ASSIGNING FIELD-SYMBOL(<gl_curr>).
+                      <gl_curr>-currencyrole = '00'.
+                      <gl_curr>-journalentryitemamount = ls_result_after-conditionrateamount.
+                      <gl_curr>-currency = ls_gr-companycodecurrency.
+                      <gl_data>-_currencyamount = lcl_pr_buffer=>lt_curr[].
+                      CLEAR: lcl_pr_buffer=>lt_curr[].
+                      lv_i = lv_i + 1.
+                      lv_glitem = lv_glitem + 1.
+                      APPEND INITIAL LINE TO lcl_pr_buffer=>lt_gl_data ASSIGNING <gl_data>.
+                      <gl_data>-glaccountlineitem = lv_glitem.
+                      <gl_data>-glaccount = ls_glmap-credit_gl.
+                      <gl_data>-documentitemtext = ls_glmap-cond_type.
+                      APPEND INITIAL LINE TO lcl_pr_buffer=>lt_curr ASSIGNING <gl_curr>.
+                      <gl_curr>-currencyrole = '00'.
+                      <gl_curr>-journalentryitemamount = ( ls_result_after-conditionrateamount * -1 ).
+                      <gl_curr>-currency = ls_gr-companycodecurrency.
+                      <gl_data>-_currencyamount = lcl_pr_buffer=>lt_curr[].
+                      CLEAR: lcl_pr_buffer=>lt_curr[].
+                      lv_glitem = lv_glitem + 1.
+                    ENDIF.
                   ENDIF.
                 ENDLOOP.
               ENDIF.
